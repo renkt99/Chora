@@ -486,9 +486,7 @@ fun TvSideNavigation(
 
                 // Middle group: vertically centred in the space between Search and Settings.
                 Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth(),
+                    modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
