@@ -34,6 +34,7 @@ import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import coil3.compose.AsyncImage
 import com.craftworks.music.R
+import com.craftworks.music.ui.playing.tv.MinimalProgressBar
 import com.craftworks.music.ui.playing.tv.NextSongButton
 import com.craftworks.music.ui.playing.tv.PlayPauseButton
 import com.craftworks.music.ui.playing.tv.PreviousSongButton
@@ -72,7 +73,7 @@ fun TvMiniPlayer(
 
     if (mediaController == null || !hasItem) return
 
-    Row(
+    Column(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 48.dp, vertical = 8.dp)
@@ -80,14 +81,24 @@ fun TvMiniPlayer(
                 MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
                 RoundedCornerShape(16.dp)
             )
-            .padding(horizontal = 8.dp, vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(horizontal = 8.dp, vertical = 4.dp)
     ) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
         Surface(
             onClick = onOpenNowPlaying,
             modifier = Modifier.weight(1f),
             shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(12.dp)),
-            colors = ClickableSurfaceDefaults.colors(containerColor = Color.Transparent)
+            // Keep the text readable when focused (subtle tint, no white fill) and don't grow
+            // the focused area over the neighbouring buttons.
+            colors = ClickableSurfaceDefaults.colors(
+                containerColor = Color.Transparent,
+                contentColor = MaterialTheme.colorScheme.onBackground,
+                focusedContainerColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.12f),
+                focusedContentColor = MaterialTheme.colorScheme.onBackground,
+                pressedContainerColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f),
+                pressedContentColor = MaterialTheme.colorScheme.onBackground
+            ),
+            scale = ClickableSurfaceDefaults.scale(focusedScale = 1f)
         ) {
             Row(
                 modifier = Modifier.padding(8.dp),
@@ -126,5 +137,12 @@ fun TvMiniPlayer(
         PreviousSongButton(mediaController)
         PlayPauseButton(mediaController)
         NextSongButton(mediaController)
+    }
+
+    MinimalProgressBar(
+        color = MaterialTheme.colorScheme.onBackground,
+        mediaController = mediaController,
+        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+    )
     }
 }

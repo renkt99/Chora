@@ -54,6 +54,9 @@ import androidx.media3.session.MediaController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import androidx.tv.material3.Button
+import androidx.tv.material3.IconButton
+import androidx.tv.material3.IconButtonDefaults
+import androidx.tv.material3.OutlinedIconButtonDefaults
 import androidx.tv.material3.ButtonDefaults
 import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.Icon
@@ -73,6 +76,7 @@ import com.craftworks.music.managers.MediaProviderManager
 import com.craftworks.music.managers.settings.AppearanceSettingsManager
 import com.craftworks.music.player.SongHelper
 import com.craftworks.music.ui.elements.dialogs.tv.SongDialog
+import com.craftworks.music.ui.elements.tv.TvAlbumSongRow
 import com.craftworks.music.ui.elements.tv.TvHorizontalSongCard
 import com.craftworks.music.ui.viewmodels.AlbumDetailsViewModel
 import com.craftworks.music.utils.StringUtils
@@ -217,10 +221,12 @@ fun TvAlbumDetails(
                     }
                 }
 
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Button (
+                    IconButton(
                         onClick = {
                             coroutineScope.launch {
                                 SongHelper.play(
@@ -234,20 +240,17 @@ fun TvAlbumDetails(
                             }
                         },
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .focusRequester(playRequester),
-                        contentPadding = ButtonDefaults.ButtonWithIconContentPadding
+                            .size(IconButtonDefaults.LargeButtonSize)
+                            .focusRequester(playRequester)
                     ) {
                         Icon(
                             Icons.Rounded.PlayArrow,
-                            contentDescription = null,
-                            modifier = Modifier.size(ButtonDefaults.IconSize),
+                            contentDescription = stringResource(R.string.action_play),
+                            modifier = Modifier.size(IconButtonDefaults.LargeIconSize),
                         )
-                        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                        Text(stringResource(R.string.action_play))
                     }
 
-                    OutlinedButton(
+                    IconButton(
                         onClick = {
                             mediaController?.shuffleModeEnabled = true
                             coroutineScope.launch {
@@ -262,16 +265,16 @@ fun TvAlbumDetails(
                                 }
                             }
                         },
-                        modifier = Modifier.fillMaxWidth(),
-                        contentPadding = ButtonDefaults.ButtonWithIconContentPadding
+                        modifier = Modifier.size(IconButtonDefaults.LargeButtonSize),
+                        border = OutlinedIconButtonDefaults.border(),
+                        colors = OutlinedIconButtonDefaults.colors(),
+                        scale = OutlinedIconButtonDefaults.scale()
                     ) {
                         Icon(
                             ImageVector.vectorResource(R.drawable.round_shuffle_28),
-                            contentDescription = null,
-                            modifier = Modifier.size(ButtonDefaults.IconSize),
+                            contentDescription = stringResource(R.string.action_shuffle),
+                            modifier = Modifier.size(IconButtonDefaults.MediumIconSize),
                         )
-                        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                        Text(stringResource(R.string.action_shuffle))
                     }
                 }
             }
@@ -306,10 +309,9 @@ fun TvAlbumDetails(
                             }
                         }
                         items(disc) { song ->
-                            TvHorizontalSongCard (
+                            TvAlbumSongRow(
                                 song = song,
                                 showTrackNumber = showTrackNumbers,
-                                showDuration = true,
                                 onClick = {
                                     coroutineScope.launch {
                                         SongHelper.play(songs, songs.indexOf(song), mediaController)
@@ -327,10 +329,9 @@ fun TvAlbumDetails(
                     }
                 } else {
                     items(songs) { song ->
-                        TvHorizontalSongCard (
+                        TvAlbumSongRow(
                             song = song,
                             showTrackNumber = showTrackNumbers,
-                            showDuration = true,
                             onClick = {
                                 coroutineScope.launch {
                                     SongHelper.play(songs, songs.indexOf(song), mediaController)

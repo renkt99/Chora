@@ -14,7 +14,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -264,6 +267,25 @@ fun TvHomeScreen(
                                         }
                                     }
                                 }
+                            )
+                        }
+                    }
+
+                    // Position dots (bottom right): current slide is solid white.
+                    Row(
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(end = 24.dp, bottom = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        repeat(bannerCount) { dotIndex ->
+                            val selected = dotIndex == currentIndex
+                            Box(
+                                modifier = Modifier
+                                    .size(if (selected) 9.dp else 7.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.White.copy(alpha = if (selected) 1f else 0.4f))
                             )
                         }
                     }

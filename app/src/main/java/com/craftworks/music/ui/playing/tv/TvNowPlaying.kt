@@ -43,6 +43,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -88,6 +89,7 @@ import com.craftworks.music.ui.playing.dpToPx
 import com.craftworks.music.ui.screens.tv.requestFocusOnFirstGainingVisibility
 import com.gigamole.composefadingedges.marqueeHorizontalFadingEdges
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.debounce
 import kotlin.time.Duration.Companion.milliseconds
@@ -110,6 +112,11 @@ fun TvNowPlaying(
     val oledProtectionMode by AppearanceSettingsManager(LocalContext.current).oledProtectionMode.collectAsStateWithLifecycle(
         OLEDProtectionMode.OFF
     )
+
+    val lyricsContext = LocalContext.current
+    val lyricsScope = rememberCoroutineScope()
+    val showLyrics by AppearanceSettingsManager(lyricsContext).nowPlayingShowLyrics
+        .collectAsStateWithLifecycle(true)
 
     LaunchedEffect(Unit) {
         interactionFlow
@@ -291,7 +298,7 @@ fun TvNowPlaying(
             }
 
             AnimatedVisibility(
-                visible = metadata?.mediaType != MediaMetadata.MEDIA_TYPE_RADIO_STATION && lyrics != null && oledProtectionMode != OLEDProtectionMode.MINIMAL,
+                visible = showLyrics && metadata?.mediaType != MediaMetadata.MEDIA_TYPE_RADIO_STATION && lyrics != null && oledProtectionMode != OLEDProtectionMode.MINIMAL,
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight(
@@ -417,6 +424,23 @@ fun TvNowPlaying(
                                     up = FocusRequester.Cancel
                                 }
                         )
+
+                        if (metadata?.mediaType != MediaMetadata.MEDIA_TYPE_RADIO_STATION) {
+                            LyricsToggleButton(
+                                lyricsOn = showLyrics,
+                                onToggle = {
+                                    lyricsScope.launch {
+                                        AppearanceSettingsManager(lyricsContext)
+                                            .setNowPlayingShowLyrics(!showLyrics)
+                                    }
+                                },
+                                modifier = Modifier
+                                    .size(IconButtonDefaults.SmallButtonSize)
+                                    .focusProperties {
+                                        up = FocusRequester.Cancel
+                                    }
+                            )
+                        }
                     }
                 }
 

@@ -49,6 +49,7 @@ class AppearanceSettingsManager @Inject constructor(
         private val APP_THEME = stringPreferencesKey("theme")
 
         private val LYRICS_ANIMATION_SPEED = intPreferencesKey("lyrics_animation_speed")
+        private val NP_SHOW_LYRICS = booleanPreferencesKey("now_playing_show_lyrics")
         private val LYRICS_AUTOSCROLL = booleanPreferencesKey("lyrics_auto_scroll")
         private val LYRICS_RECENTER_AFTER_SCROLL = booleanPreferencesKey("lyrics_recenter_after_Scroll")
         private val LYRICS_WORD_BOUNCE = booleanPreferencesKey("lyrics_word_bounce")
@@ -259,6 +260,19 @@ class AppearanceSettingsManager @Inject constructor(
         withContext(NonCancellable) {
             context.dataStore.edit { preferences ->
                 preferences[NP_LYRICS_ALIGNMENT] = nowPlayingLyricsAlignment.name
+            }
+        }
+    }
+
+    val nowPlayingShowLyrics: Flow<Boolean> =
+        context.dataStore.data.map { preferences ->
+            preferences[NP_SHOW_LYRICS] ?: true
+        }
+
+    suspend fun setNowPlayingShowLyrics(show: Boolean) {
+        withContext(NonCancellable) {
+            context.dataStore.edit { preferences ->
+                preferences[NP_SHOW_LYRICS] = show
             }
         }
     }

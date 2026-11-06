@@ -403,7 +403,7 @@ fun TvSideNavigation(
     val context = LocalContext.current
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
-    val (home, albums, songs, artists, radios, playlists, settings) = remember { FocusRequester.createRefs() }
+    val (home, albums, songs, artists, radios, playlists, settings, search) = remember { FocusRequester.createRefs() }
     val currentRoute by navController.currentBackStackEntryFlow.collectAsStateWithLifecycle(initialValue = null)
 
     val orderedNavItems = AppearanceSettingsManager(context).bottomNavItemsFlow.collectAsState(
@@ -439,14 +439,18 @@ fun TvSideNavigation(
                     .padding(vertical = 24.dp)
                     .focusProperties {
                         enter = {
-                            when (currentRoute) {
-                                Screen.Home -> home
-                                Screen.Albums -> albums
-                                Screen.Songs -> songs
-                                Screen.Artists -> artists
-                                Screen.Radios -> radios
-                                Screen.Playlists -> playlists
-                                Screen.Settings -> settings
+                            // Same check the sidebar uses to highlight the selected item, so pushing
+                            // left always lands on the item for the page you are on.
+                            val destination = backStackEntry?.destination
+                            when {
+                                destination.isRouteSelected(Screen.Search) -> search
+                                destination.isRouteSelected(Screen.Home) -> home
+                                destination.isRouteSelected(Screen.Albums) -> albums
+                                destination.isRouteSelected(Screen.Songs) -> songs
+                                destination.isRouteSelected(Screen.Artists) -> artists
+                                destination.isRouteSelected(Screen.Radios) -> radios
+                                destination.isRouteSelected(Screen.Playlists) -> playlists
+                                destination.isRouteSelected(Screen.Settings) -> settings
                                 else -> FocusRequester.Default
                             }
                         }
@@ -455,7 +459,9 @@ fun TvSideNavigation(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 NavigationDrawerItem(
-                    modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp),
+                    modifier = Modifier
+                        .padding(vertical = 4.dp, horizontal = 8.dp)
+                        .focusRequester(search),
                     selected = backStackEntry?.destination.isRouteSelected(Screen.Search),
                     onClick = {
                         if (!backStackEntry?.destination.isRouteSelected(Screen.Search)) {
@@ -494,7 +500,6 @@ fun TvSideNavigation(
                                     Screen.Artists -> artists
                                     Screen.Radios -> radios
                                     Screen.Playlists -> playlists
-                                    Screen.Settings -> settings
                                     else -> FocusRequester.Default
                                 }
                             ),
@@ -564,7 +569,9 @@ fun TvSideNavigation(
                     verticalArrangement = Arrangement.Bottom
                 ) {
                     NavigationDrawerItem(
-                        modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp),
+                        modifier = Modifier
+                            .padding(vertical = 4.dp, horizontal = 8.dp)
+                            .focusRequester(settings),
                         selected = backStackEntry?.destination.isRouteSelected(Screen.Settings),
                         onClick = {
                             if (!backStackEntry?.destination.isRouteSelected(Screen.Settings))

@@ -391,6 +391,29 @@ fun RepeatButton(player: Player, modifier: Modifier = Modifier) {
 }
 
 @Composable
+fun LyricsToggleButton(
+    lyricsOn: Boolean,
+    onToggle: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    IconButton(
+        onClick = onToggle,
+        modifier = modifier,
+        border = if (lyricsOn) IconButtonDefaults.border() else OutlinedIconButtonDefaults.border(),
+        colors = if (lyricsOn) IconButtonDefaults.colors() else OutlinedIconButtonDefaults.colors(),
+        scale = if (lyricsOn) IconButtonDefaults.scale() else OutlinedIconButtonDefaults.scale(),
+    ) {
+        Icon(
+            imageVector = ImageVector.vectorResource(
+                if (lyricsOn) R.drawable.lyrics_active else R.drawable.lyrics_inactive
+            ),
+            contentDescription = if (lyricsOn) "Hide lyrics" else "Show lyrics",
+            modifier = Modifier.size(IconButtonDefaults.SmallIconSize),
+        )
+    }
+}
+
+@Composable
 private fun repeatModeIcon(repeatMode: @Player.RepeatMode Int): ImageVector {
     return when (repeatMode) {
         Player.REPEAT_MODE_OFF -> ImageVector.vectorResource(R.drawable.rounded_repeat_24)
