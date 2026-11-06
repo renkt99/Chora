@@ -107,6 +107,7 @@ fun TvMiniPlayer(
                     Text(
                         text = metadata?.title?.toString() ?: "",
                         style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onBackground,
                         fontWeight = FontWeight.SemiBold,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
