@@ -113,10 +113,12 @@ fun TvNowPlaying(
         OLEDProtectionMode.OFF
     )
 
+    // Remembered so the settings flow is collected once (a new manager per recomposition would
+    // restart collection and briefly reset the value, making the toggle flip the wrong way).
     val lyricsContext = LocalContext.current
+    val lyricsSettings = remember { AppearanceSettingsManager(lyricsContext) }
     val lyricsScope = rememberCoroutineScope()
-    val showLyrics by AppearanceSettingsManager(lyricsContext).nowPlayingShowLyrics
-        .collectAsStateWithLifecycle(true)
+    val showLyrics by lyricsSettings.nowPlayingShowLyrics.collectAsStateWithLifecycle(true)
 
     LaunchedEffect(Unit) {
         interactionFlow
@@ -430,8 +432,7 @@ fun TvNowPlaying(
                                 lyricsOn = showLyrics,
                                 onToggle = {
                                     lyricsScope.launch {
-                                        AppearanceSettingsManager(lyricsContext)
-                                            .setNowPlayingShowLyrics(!showLyrics)
+                                        lyricsSettings.setNowPlayingShowLyrics(!showLyrics)
                                     }
                                 },
                                 modifier = Modifier
