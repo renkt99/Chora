@@ -199,7 +199,7 @@ private fun OverviewStep(
         Icon(
             imageVector = ImageVector.vectorResource(R.drawable.ic_banner_foreground),
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
+            tint = androidx.compose.ui.graphics.Color.Unspecified,
             modifier = Modifier
         )
 
@@ -291,7 +291,7 @@ private fun DoneStep(onFinish: () -> Unit) {
         Icon(
             imageVector = ImageVector.vectorResource(R.drawable.ic_banner_foreground),
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
+            tint = androidx.compose.ui.graphics.Color.Unspecified,
         )
 
         Text(

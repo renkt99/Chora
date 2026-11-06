@@ -104,7 +104,7 @@ fun OnboardingDialog(
                             Icon(
                                 ImageVector.vectorResource(R.drawable.ic_banner_foreground),
                                 contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onBackground,
+                                tint = androidx.compose.ui.graphics.Color.Unspecified,
                             )
 
                             Text(
@@ -212,7 +212,7 @@ private fun OnboardingDoneScreen(
     Icon(
         ImageVector.vectorResource(R.drawable.ic_banner_foreground),
         contentDescription = null,
-        tint = MaterialTheme.colorScheme.onBackground,
+        tint = androidx.compose.ui.graphics.Color.Unspecified,
     )
 
     Text(
