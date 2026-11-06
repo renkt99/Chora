@@ -4,17 +4,22 @@ package com.craftworks.music.ui.playing.tv
 
 import android.util.Log
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.focusable
+import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -34,6 +39,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.key.Key
@@ -390,5 +396,65 @@ private fun repeatModeIcon(repeatMode: @Player.RepeatMode Int): ImageVector {
         Player.REPEAT_MODE_OFF -> ImageVector.vectorResource(R.drawable.rounded_repeat_24)
         Player.REPEAT_MODE_ONE -> ImageVector.vectorResource(R.drawable.rounded_repeat1_24)
         else -> ImageVector.vectorResource(R.drawable.rounded_repeat_24)
+    }
+}
+
+/**
+ * Slim, number-free progress bar shown on the Now Playing screen while the full controls are hidden.
+ * Fill = time played, remaining track = time left.
+ */
+@Composable
+fun MinimalProgressBar(
+    color: Color,
+    mediaController: MediaController?,
+    modifier: Modifier = Modifier
+) {
+    var position by remember { mutableLongStateOf(mediaController?.currentPosition ?: 0L) }
+    var duration by remember { mutableLongStateOf(mediaController?.duration?.coerceAtLeast(0L) ?: 0L) }
+    var playing by remember { mutableStateOf(mediaController?.isPlaying ?: false) }
+
+    DisposableEffect(mediaController) {
+        val listener = object : Player.Listener {
+            override fun onEvents(player: Player, events: Player.Events) {
+                position = player.currentPosition
+                duration = player.duration.coerceAtLeast(0L)
+                playing = player.isPlaying
+            }
+        }
+        mediaController?.addListener(listener)
+        position = mediaController?.currentPosition ?: 0L
+        duration = mediaController?.duration?.coerceAtLeast(0L) ?: 0L
+        playing = mediaController?.isPlaying ?: false
+        onDispose { mediaController?.removeListener(listener) }
+    }
+
+    LaunchedEffect(mediaController, playing) {
+        while (isActive) {
+            position = mediaController?.currentPosition ?: 0L
+            duration = mediaController?.duration?.coerceAtLeast(0L) ?: 0L
+            if (!playing) break
+            delay(500L)
+        }
+    }
+
+    val fraction by animateFloatAsState(
+        targetValue = if (duration > 0L) (position.toFloat() / duration).coerceIn(0f, 1f) else 0f,
+        animationSpec = tween(500, easing = LinearEasing),
+        label = "Minimal progress"
+    )
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(4.dp)
+            .clip(RoundedCornerShape(2.dp))
+            .background(color.copy(alpha = 0.25f))
+    ) {
+        Box(
+            Modifier
+                .fillMaxWidth(fraction)
+                .fillMaxHeight()
+                .background(color)
+        )
     }
 }

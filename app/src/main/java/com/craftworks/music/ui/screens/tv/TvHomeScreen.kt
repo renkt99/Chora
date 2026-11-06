@@ -223,7 +223,14 @@ fun TvHomeScreen(
                                 else -> false
                             }
                         }
-                        .onFocusChanged { bannerHasFocus = it.hasFocus }
+                        .onFocusChanged {
+                            bannerHasFocus = it.hasFocus
+                            // Focusing the Play button only scrolls the button into view, which can
+                            // leave the top of the banner cut off. Always show the whole banner.
+                            if (it.hasFocus) {
+                                coroutineScope.launch { columnState.animateScrollToItem(0) }
+                            }
+                        }
                 ) {
                     AnimatedContent(
                         targetState = currentIndex,

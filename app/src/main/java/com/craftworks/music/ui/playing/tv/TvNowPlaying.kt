@@ -8,6 +8,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -21,6 +22,7 @@ import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -39,6 +41,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -53,7 +56,9 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
@@ -118,11 +123,24 @@ fun TvNowPlaying(
         label = "Animated text color"
     )
 
-    val bottomPadding by animateIntAsState(
-        targetValue = if (controlsVisible && oledProtectionMode != OLEDProtectionMode.LYRICS_ONLY) dpToPx(64) else 0,
+    // Real height of the controls bar, so the artwork/lyrics make room for it instead of
+    // being overlapped (the old fixed 64dp shift was smaller than the bar).
+    var controlsHeightPx by remember { mutableIntStateOf(dpToPx(150)) }
+    val isRadio = metadata?.mediaType == MediaMetadata.MEDIA_TYPE_RADIO_STATION
+    val showMinimalBar = !controlsVisible && !isRadio &&
+            oledProtectionMode != OLEDProtectionMode.LYRICS_ONLY
+
+    val bottomReserve by animateIntAsState(
+        targetValue = when {
+            controlsVisible && oledProtectionMode != OLEDProtectionMode.LYRICS_ONLY ->
+                controlsHeightPx + dpToPx(16)
+            showMinimalBar -> dpToPx(24)
+            else -> 0
+        },
         animationSpec = tween(600, 0, FastOutSlowInEasing),
-        label = "Move content up with controls visible"
+        label = "Reserve space for controls"
     )
+    val bottomReserveDp = with(LocalDensity.current) { bottomReserve.toDp() }
 
     Box(
         modifier = Modifier
@@ -174,16 +192,25 @@ fun TvNowPlaying(
 
         Row (
             Modifier
-                .offset { IntOffset(0, -bottomPadding) }
-                .fillMaxSize(),
+                .fillMaxSize()
+                .padding(bottom = bottomReserveDp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
             if (oledProtectionMode == OLEDProtectionMode.OFF) {
-                Column(
+                BoxWithConstraints(
                     modifier = Modifier
                         .weight(1f)
-                        .fillMaxHeight(),
+                        .fillMaxHeight()
+                ) {
+                // Shrink the cover (never below 96dp) when space is tight, leaving room for the text.
+                val coverHeight by animateDpAsState(
+                    targetValue = (maxHeight - 130.dp).coerceIn(96.dp, 320.dp),
+                    animationSpec = tween(600, 0, FastOutSlowInEasing),
+                    label = "Cover height"
+                )
+                Column(
+                    modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.SpaceEvenly,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -191,7 +218,7 @@ fun TvNowPlaying(
                         imageCard = {
                             Box(
                                 Modifier
-                                    .height(320.dp)
+                                    .height(coverHeight)
                                     .fillMaxWidth(),
                                 contentAlignment = Alignment.Center
                             ) {
@@ -244,6 +271,7 @@ fun TvNowPlaying(
                             )
                         }
                     )
+                }
                 }
             }
 
@@ -318,6 +346,7 @@ fun TvNowPlaying(
                     .widthIn(max = 480.dp)
                     .fillMaxWidth()
                     .wrapContentHeight()
+                    .onSizeChanged { controlsHeightPx = it.height }
                     .focusGroup(),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -393,6 +422,19 @@ fun TvNowPlaying(
                 if (metadata?.mediaType != MediaMetadata.MEDIA_TYPE_RADIO_STATION)
                     PlaybackProgressSlider(iconTextColor, mediaController)
             }
+        }
+
+        AnimatedVisibility(
+            visible = showMinimalBar,
+            enter = fadeIn(tween(300)),
+            exit = fadeOut(tween(300)),
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(horizontal = 24.dp)
+                .widthIn(max = 480.dp)
+                .fillMaxWidth()
+        ) {
+            MinimalProgressBar(iconTextColor, mediaController)
         }
     }
 }

@@ -309,6 +309,7 @@ fun TvAlbumDetails(
                             TvHorizontalSongCard (
                                 song = song,
                                 showTrackNumber = showTrackNumbers,
+                                showDuration = true,
                                 onClick = {
                                     coroutineScope.launch {
                                         SongHelper.play(songs, songs.indexOf(song), mediaController)
@@ -329,6 +330,7 @@ fun TvAlbumDetails(
                         TvHorizontalSongCard (
                             song = song,
                             showTrackNumber = showTrackNumbers,
+                            showDuration = true,
                             onClick = {
                                 coroutineScope.launch {
                                     SongHelper.play(songs, songs.indexOf(song), mediaController)

@@ -32,6 +32,7 @@ import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.craftworks.music.R
 import com.craftworks.music.data.model.id
+import com.craftworks.music.utils.StringUtils
 
 @Preview(showBackground = true, device = "id:tv_1080p")
 @Composable
@@ -39,6 +40,7 @@ fun TvHorizontalSongCard(
     song: MediaItem = MediaItem.EMPTY,
     modifier: Modifier = Modifier,
     showTrackNumber: Boolean = false,
+    showDuration: Boolean = false,
     onClick: () -> Unit = { },
     onLongClick: () -> Unit = { }
 ) {
@@ -101,8 +103,14 @@ fun TvHorizontalSongCard(
             }
         },
         subtitle = {
+            val durationText = if (showDuration) {
+                song.mediaMetadata.durationMs
+                    ?.takeIf { it > 0 }
+                    ?.let { StringUtils.formatSeconds((it / 1000).toInt()) }
+            } else null
             Text(
-                text = song.mediaMetadata.artist.toString(),
+                text = listOfNotNull(song.mediaMetadata.artist?.toString(), durationText)
+                    .joinToString("  •  "),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.padding(start = 16.dp)
