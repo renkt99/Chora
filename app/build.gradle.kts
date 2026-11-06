@@ -33,6 +33,17 @@ android {
         }
     }
 
+    val personalKeystore = System.getenv("CHORA_KEYSTORE_FILE")
+    if (personalKeystore != null) {
+        signingConfigs.create("personal") {
+            storeFile = file(personalKeystore)
+            storeType = "pkcs12"
+            storePassword = System.getenv("CHORA_KEYSTORE_PASSWORD")
+            keyAlias = "chora"
+            keyPassword = System.getenv("CHORA_KEYSTORE_PASSWORD")
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
@@ -41,7 +52,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.findByName("personal") ?: signingConfigs.getByName("debug")
         }
         debug {
             isDebuggable = false

@@ -25,7 +25,18 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x ./gradlew
 
+      - name: Decode signing key
+        env:
+          KEYSTORE_B64: ${{ secrets.CHORA_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/chora.p12"
+            echo "CHORA_KEYSTORE_FILE=$RUNNER_TEMP/chora.p12" >> "$GITHUB_ENV"
+          fi
+
       - name: Build release APK
+        env:
+          CHORA_KEYSTORE_PASSWORD: ${{ secrets.CHORA_KEYSTORE_PASSWORD }}
         run: ./gradlew assembleRelease
 
       - name: Upload APK
