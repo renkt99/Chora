@@ -446,9 +446,7 @@ fun TvSideNavigation(
                                 destination.isRouteSelected(Screen.Search) -> search
                                 destination.isRouteSelected(Screen.Home) -> home
                                 destination.isRouteSelected(Screen.Albums) -> albums
-                                destination.isRouteSelected(Screen.Songs) -> songs
                                 destination.isRouteSelected(Screen.Artists) -> artists
-                                destination.isRouteSelected(Screen.Radios) -> radios
                                 destination.isRouteSelected(Screen.Playlists) -> playlists
                                 destination.isRouteSelected(Screen.Settings) -> settings
                                 else -> FocusRequester.Default
@@ -487,6 +485,8 @@ fun TvSideNavigation(
 
                 orderedNavItems.forEach { item ->
                     if (!item.enabled) return@forEach
+                    // Radios and Songs are intentionally not offered in the TV sidebar.
+                    if (item.screenRoute == Screen.Radios || item.screenRoute == Screen.Songs) return@forEach
 
                     val isSelected = backStackEntry?.destination.isRouteSelected(item.screenRoute)
                     NavigationDrawerItem(

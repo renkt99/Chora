@@ -81,9 +81,12 @@ fun TvMiniPlayer(
                 MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
                 RoundedCornerShape(16.dp)
             )
-            .padding(horizontal = 8.dp, vertical = 4.dp)
+            .padding(horizontal = 12.dp, vertical = 8.dp)
     ) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
         Surface(
             onClick = onOpenNowPlaying,
             modifier = Modifier.weight(1f),
@@ -142,7 +145,7 @@ fun TvMiniPlayer(
     MinimalProgressBar(
         color = MaterialTheme.colorScheme.onBackground,
         mediaController = mediaController,
-        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
     )
     }
 }

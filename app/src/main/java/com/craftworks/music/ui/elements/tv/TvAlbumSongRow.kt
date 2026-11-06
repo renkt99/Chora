@@ -3,6 +3,7 @@ package com.craftworks.music.ui.elements.tv
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -73,7 +74,7 @@ fun TvAlbumSongRow(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 10.dp),
+                .padding(horizontal = 20.dp, vertical = 18.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(24.dp)
         ) {
@@ -105,36 +106,37 @@ fun TvAlbumSongRow(
                 )
             }
 
-            // Title (+ explicit marker)
-            Row(
-                modifier = Modifier.weight(1.5f),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            // Title (+ explicit marker) with the artist underneath, both left aligned
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                Text(
-                    text = song.mediaMetadata.title?.toString() ?: "",
-                    style = MaterialTheme.typography.titleMedium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f, fill = false)
-                )
-                if (song.mediaMetadata.extras?.getBoolean(METADATA_KEY_IS_EXPLICIT) == true) {
-                    Icon(
-                        imageVector = ImageVector.vectorResource(R.drawable.rounded_explicit_24),
-                        contentDescription = "Explicit"
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = song.mediaMetadata.title?.toString() ?: "",
+                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false)
                     )
+                    if (song.mediaMetadata.extras?.getBoolean(METADATA_KEY_IS_EXPLICIT) == true) {
+                        Icon(
+                            imageVector = ImageVector.vectorResource(R.drawable.rounded_explicit_24),
+                            contentDescription = "Explicit"
+                        )
+                    }
                 }
+                Text(
+                    text = song.mediaMetadata.artist?.toString() ?: "",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
-
-            // Artist
-            Text(
-                text = song.mediaMetadata.artist?.toString() ?: "",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f)
-            )
 
             // Length
             Text(
