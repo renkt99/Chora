@@ -125,7 +125,8 @@ fun TvNowPlaying(
 
     // Real height of the controls bar, so the artwork/lyrics make room for it instead of
     // being overlapped (the old fixed 64dp shift was smaller than the bar).
-    var controlsHeightPx by remember { mutableIntStateOf(dpToPx(150)) }
+    val defaultControlsHeightPx = dpToPx(150)
+    var controlsHeightPx by remember { mutableIntStateOf(defaultControlsHeightPx) }
     val isRadio = metadata?.mediaType == MediaMetadata.MEDIA_TYPE_RADIO_STATION
     val showMinimalBar = !controlsVisible && !isRadio &&
             oledProtectionMode != OLEDProtectionMode.LYRICS_ONLY
