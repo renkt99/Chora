@@ -1,6 +1,7 @@
 package com.craftworks.music.ui.screens.tv
 
 import android.graphics.drawable.BitmapDrawable
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -30,9 +31,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,6 +50,11 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.platform.LocalContext
@@ -63,12 +71,10 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import androidx.palette.graphics.Palette
 import androidx.tv.material3.Button
-import androidx.tv.material3.Carousel
 import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
-import androidx.tv.material3.rememberCarouselState
 import coil3.compose.AsyncImage
 import coil3.imageLoader
 import coil3.request.CachePolicy
@@ -87,6 +93,7 @@ import com.craftworks.music.ui.elements.tv.TvAlbumCard
 import com.craftworks.music.ui.screens.HomeItem
 import com.craftworks.music.ui.viewmodels.HomeScreenViewModel
 import com.craftworks.music.utils.StringUtils
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalTvMaterial3Api::class)
@@ -176,52 +183,84 @@ fun TvHomeScreen(
         */
 
         item (key = "carousel") {
-            val carouselState = rememberCarouselState()
-            var carouselFocused by remember { mutableStateOf(false) }
+            val bannerCount = shuffledAlbums.size
+            var bannerIndex by rememberSaveable { mutableIntStateOf(0) }
+            var bannerHasFocus by remember { mutableStateOf(false) }
             val coroutineScope = rememberCoroutineScope()
 
-            Carousel(
-                itemCount = shuffledAlbums.size,
-                modifier = Modifier
-                    .height(320.dp)
-                    .fillMaxWidth()
-                    .padding(horizontal = 48.dp)
-                    .padding(top = 24.dp)
-                    .clip(MaterialTheme.shapes.large)
-                    .onFocusChanged {
-                        carouselFocused = it.isFocused
-                    },
-                carouselState = carouselState,
-                contentTransformEndToStart =
-                    fadeIn(tween(600)).togetherWith(fadeOut(tween(600))),
-                contentTransformStartToEnd =
-                    fadeIn(tween(600)).togetherWith(fadeOut(tween(600)))
-            ) { itemIndex ->
-                val album = shuffledAlbums[itemIndex]
-                CarouselItem(
-                    album = album,
-                    carouselFocused = carouselFocused,
-                    modifier = Modifier.animateEnterExit(
-                        enter = slideInHorizontally(animationSpec = tween(1000)) { it / 16 },
-                        exit = slideOutHorizontally(animationSpec = tween(1000)) { -it / 16 }
-                    ),
-                    onPlay = {
-                        coroutineScope.launch {
-                            val mediaItems = viewModel.getAlbumSongs(
-                                album.mediaMetadata.id ?: ""
-                            )
-                            if (mediaItems.size > 1)
-                                SongHelper.play(
-                                    mediaItems = mediaItems.subList(1, mediaItems.size),
-                                    index = 0,
-                                    mediaController = mediaController
-                                )
-                            navHostController.navigate(Screen.NowPlayingLandscape) {
-                                launchSingleTop = true
+            if (bannerCount > 0) {
+                val currentIndex = bannerIndex.coerceIn(0, bannerCount - 1)
+
+                // Auto-advance; restarts whenever the slide changes (including manual navigation).
+                LaunchedEffect(currentIndex, bannerCount) {
+                    delay(6000)
+                    bannerIndex = (currentIndex + 1) % bannerCount
+                }
+
+                Box(
+                    modifier = Modifier
+                        .height(320.dp)
+                        .fillMaxWidth()
+                        .padding(horizontal = 48.dp)
+                        .padding(top = 24.dp)
+                        .clip(MaterialTheme.shapes.large)
+                        // Left/Right step through the banner first. Only once the first (Left) or
+                        // last (Right) slide is reached does the key fall through to normal focus
+                        // navigation, i.e. the sidebar.
+                        .onPreviewKeyEvent { event ->
+                            if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
+                            when (event.key) {
+                                Key.DirectionLeft -> if (currentIndex > 0) {
+                                    bannerIndex = currentIndex - 1
+                                    true
+                                } else false
+
+                                Key.DirectionRight -> if (currentIndex < bannerCount - 1) {
+                                    bannerIndex = currentIndex + 1
+                                    true
+                                } else false
+
+                                else -> false
                             }
                         }
+                        .onFocusChanged { bannerHasFocus = it.hasFocus }
+                ) {
+                    AnimatedContent(
+                        targetState = currentIndex,
+                        transitionSpec = { fadeIn(tween(600)).togetherWith(fadeOut(tween(600))) },
+                        label = "home_banner"
+                    ) { itemIndex ->
+                        val album = shuffledAlbums.getOrNull(itemIndex)
+                        if (album != null) {
+                            // Keep focus on the banner's button when it moves to the next slide.
+                            val focusOnShow = remember { bannerHasFocus }
+                            CarouselItem(
+                                album = album,
+                                carouselFocused = focusOnShow,
+                                modifier = Modifier.animateEnterExit(
+                                    enter = slideInHorizontally(animationSpec = tween(1000)) { it / 16 },
+                                    exit = slideOutHorizontally(animationSpec = tween(1000)) { -it / 16 }
+                                ),
+                                onPlay = {
+                                    coroutineScope.launch {
+                                        val mediaItems = viewModel.getAlbumSongs(
+                                            album.mediaMetadata.id ?: ""
+                                        )
+                                        if (mediaItems.size > 1)
+                                            SongHelper.play(
+                                                mediaItems = mediaItems.subList(1, mediaItems.size),
+                                                index = 0,
+                                                mediaController = mediaController
+                                            )
+                                        navHostController.navigate(Screen.NowPlayingLandscape) {
+                                            launchSingleTop = true
+                                        }
+                                    }
+                                }
+                            )
+                        }
                     }
-                )
+                }
             }
         }
 

@@ -613,11 +613,30 @@ fun TvSideNavigation(
             }
         },
         content = {
-            Box(Modifier
-                .focusRestorer()
-                .focusGroup()
-            ) {
-                content()
+            val onNowPlayingScreen =
+                backStackEntry?.destination.isRouteSelected(Screen.NowPlayingLandscape)
+
+            Column(Modifier.fillMaxSize()) {
+                Box(
+                    Modifier
+                        .weight(1f)
+                        .focusRestorer()
+                        .focusGroup()
+                ) {
+                    content()
+                }
+
+                if (!onNowPlayingScreen) {
+                    com.craftworks.music.ui.elements.tv.TvMiniPlayer(
+                        mediaController = mediaController,
+                        onOpenNowPlaying = {
+                            navController.navigate(Screen.NowPlayingLandscape) {
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }
+                    )
+                }
             }
         }
     )
