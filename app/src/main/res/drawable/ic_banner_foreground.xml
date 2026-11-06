@@ -4,8 +4,8 @@
     android:viewportWidth="320"
     android:viewportHeight="180">
   <!-- scaled about the centre so the artwork stays inside the adaptive-icon safe zone -->
-  <group android:scaleX="0.88"
-      android:scaleY="0.88"
+  <group android:scaleX="0.66"
+      android:scaleY="0.66"
       android:pivotX="160"
       android:pivotY="90">
     <path
