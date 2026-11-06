@@ -25,8 +25,10 @@ import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -35,7 +37,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
@@ -133,7 +137,6 @@ fun TvAlbumDetails(
     ) {
         val coroutineScope = rememberCoroutineScope()
         val playRequester = remember { FocusRequester() }
-        val firstSongRequester = remember { FocusRequester() }
 
         var isStarred by remember {
             mutableStateOf(
@@ -281,13 +284,23 @@ fun TvAlbumDetails(
             }
 
             val songs = currentAlbum.subList(1, currentAlbum.size)
+
+            // Moving right into the list lands on the first song the first time, then on the song
+            // that was last focused (so left-then-right returns to where you were).
+            val songRequesters = remember(songs.size) { List(songs.size) { FocusRequester() } }
+            var lastFocusedSong by remember { mutableIntStateOf(0) }
+            val attachedSongs = remember { HashSet<Int>() }
             val groupedSongs = songs.groupBy { it.mediaMetadata.discNumber }
 
             LazyColumn(
                 modifier = Modifier
                     .weight(1f)
-                    // First entry goes to the first song; later entries restore the last one.
-                    .focusRestorer(firstSongRequester)
+                    .focusProperties {
+                        enter = {
+                            val target = if (lastFocusedSong in attachedSongs) lastFocusedSong else 0
+                            if (target in attachedSongs) songRequesters[target] else FocusRequester.Default
+                        }
+                    }
                     .focusGroup()
                     .fillMaxHeight(),
                 contentPadding = PaddingValues(vertical = 24.dp),
@@ -312,9 +325,16 @@ fun TvAlbumDetails(
                             }
                         }
                         items(disc) { song ->
+                            val songIndex = songs.indexOf(song)
+                            DisposableEffect(songIndex) {
+                                attachedSongs.add(songIndex)
+                                onDispose { attachedSongs.remove(songIndex) }
+                            }
                             TvAlbumSongRow(
                                 song = song,
-                                modifier = if (song == songs.first()) Modifier.focusRequester(firstSongRequester) else Modifier,
+                                modifier = Modifier
+                                    .focusRequester(songRequesters[songIndex])
+                                    .onFocusChanged { if (it.hasFocus) lastFocusedSong = songIndex },
                                 showTrackNumber = showTrackNumbers,
                                 onClick = {
                                     coroutineScope.launch {
@@ -333,9 +353,16 @@ fun TvAlbumDetails(
                     }
                 } else {
                     items(songs) { song ->
+                        val songIndex = songs.indexOf(song)
+                        DisposableEffect(songIndex) {
+                            attachedSongs.add(songIndex)
+                            onDispose { attachedSongs.remove(songIndex) }
+                        }
                         TvAlbumSongRow(
                             song = song,
-                            modifier = if (song == songs.first()) Modifier.focusRequester(firstSongRequester) else Modifier,
+                            modifier = Modifier
+                                .focusRequester(songRequesters[songIndex])
+                                .onFocusChanged { if (it.hasFocus) lastFocusedSong = songIndex },
                             showTrackNumber = showTrackNumbers,
                             onClick = {
                                 coroutineScope.launch {
