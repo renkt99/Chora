@@ -133,6 +133,7 @@ fun TvAlbumDetails(
     ) {
         val coroutineScope = rememberCoroutineScope()
         val playRequester = remember { FocusRequester() }
+        val firstSongRequester = remember { FocusRequester() }
 
         var isStarred by remember {
             mutableStateOf(
@@ -285,6 +286,8 @@ fun TvAlbumDetails(
             LazyColumn(
                 modifier = Modifier
                     .weight(1f)
+                    // First entry goes to the first song; later entries restore the last one.
+                    .focusRestorer(firstSongRequester)
                     .focusGroup()
                     .fillMaxHeight(),
                 contentPadding = PaddingValues(vertical = 24.dp),
@@ -311,6 +314,7 @@ fun TvAlbumDetails(
                         items(disc) { song ->
                             TvAlbumSongRow(
                                 song = song,
+                                modifier = if (song == songs.first()) Modifier.focusRequester(firstSongRequester) else Modifier,
                                 showTrackNumber = showTrackNumbers,
                                 onClick = {
                                     coroutineScope.launch {
@@ -331,6 +335,7 @@ fun TvAlbumDetails(
                     items(songs) { song ->
                         TvAlbumSongRow(
                             song = song,
+                            modifier = if (song == songs.first()) Modifier.focusRequester(firstSongRequester) else Modifier,
                             showTrackNumber = showTrackNumbers,
                             onClick = {
                                 coroutineScope.launch {

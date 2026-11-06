@@ -483,6 +483,14 @@ fun TvSideNavigation(
                     androidx.tv.material3.Text(text = stringResource(R.string.nav_search))
                 }
 
+                // Middle group: vertically centred in the space between Search and Settings.
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
                 orderedNavItems.forEach { item ->
                     if (!item.enabled) return@forEach
                     // Radios and Songs are intentionally not offered in the TV sidebar.
@@ -561,13 +569,9 @@ fun TvSideNavigation(
                         androidx.tv.material3.Text(text = stringResource(R.string.nav_playing))
                     }
                 }
+                }
 
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight(),
-                    verticalArrangement = Arrangement.Bottom
-                ) {
+                Column {
                     NavigationDrawerItem(
                         modifier = Modifier
                             .padding(vertical = 4.dp, horizontal = 8.dp)
